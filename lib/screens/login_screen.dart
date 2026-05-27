@@ -4,56 +4,117 @@ import '../services/auth_service.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
+
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<LoginScreen> createState() =>
+      _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState
+    extends State<LoginScreen> {
 
-  final TextEditingController usernameController =
+  final TextEditingController
+      usernameController =
       TextEditingController();
 
-  final TextEditingController passwordController =
+  final TextEditingController
+      passwordController =
       TextEditingController();
 
   bool loading = false;
 
   Future<void> login() async {
 
-    setState(() {
-      loading = true;
-    });
+    if (usernameController.text
+            .trim()
+            .isEmpty ||
+        passwordController.text
+            .trim()
+            .isEmpty) {
 
-    final success = await AuthService.login(
-      usernameController.text,
-      passwordController.text,
-    );
-
-    setState(() {
-      loading = false;
-    });
-
-    if (success) {
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const HomeScreen(),
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Completa todos los campos',
+          ),
         ),
       );
 
-    } else {
+      return;
+    }
 
-      ScaffoldMessenger.of(context).showSnackBar(
+    try {
+
+      setState(() {
+        loading = true;
+      });
+
+      bool success =
+          await AuthService.login(
+        usernameController.text.trim(),
+        passwordController.text.trim(),
+      );
+
+      if (success) {
+
+        setState(() {
+          loading = false;
+        });
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                const HomeScreen(),
+          ),
+        );
+
+      } else {
+
+        setState(() {
+          loading = false;
+        });
+
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Credenciales incorrectas',
+            ),
+          ),
+        );
+      }
+
+    } catch (e) {
+
+      setState(() {
+        loading = false;
+      });
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         const SnackBar(
           content: Text(
-            'Credenciales incorrectas',
+            'Error al iniciar sesión',
           ),
         ),
       );
     }
+  }
+
+  Future<void> register() async {
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Registro desactivado temporalmente',
+        ),
+      ),
+    );
   }
 
   @override
@@ -64,10 +125,14 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Center(
 
         child: Padding(
-          padding: const EdgeInsets.all(20),
+
+          padding:
+              const EdgeInsets.all(20),
 
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+
+            mainAxisAlignment:
+                MainAxisAlignment.center,
 
             children: [
 
@@ -83,78 +148,93 @@ class _LoginScreenState extends State<LoginScreen> {
                 'Tweeter',
                 style: TextStyle(
                   fontSize: 40,
-                  fontWeight: FontWeight.bold,
+                  fontWeight:
+                      FontWeight.bold,
                 ),
               ),
 
               const SizedBox(height: 40),
 
               TextField(
-                controller: usernameController,
 
-                decoration: const InputDecoration(
+                controller:
+                    usernameController,
+
+                decoration:
+                    const InputDecoration(
+
                   hintText: 'Usuario',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
+
+                  border:
+                      OutlineInputBorder(),
+
+                  prefixIcon:
+                      Icon(Icons.person),
                 ),
               ),
 
               const SizedBox(height: 20),
 
               TextField(
-                controller: passwordController,
+
+                controller:
+                    passwordController,
+
                 obscureText: true,
 
-                decoration: const InputDecoration(
-                  hintText: 'Contraseña',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
+                decoration:
+                    const InputDecoration(
+
+                  hintText:
+                      'Contraseña',
+
+                  border:
+                      OutlineInputBorder(),
+
+                  prefixIcon:
+                      Icon(Icons.lock),
                 ),
               ),
 
               const SizedBox(height: 20),
 
               SizedBox(
+
                 width: double.infinity,
 
                 child: ElevatedButton(
-                  onPressed: loading ? null : login,
+
+                  onPressed:
+                      loading
+                          ? null
+                          : login,
 
                   child: loading
+
                       ? const CircularProgressIndicator()
-                      : const Text('Iniciar Sesión'),
+
+                      : const Text(
+                          'Iniciar Sesión',
+                        ),
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
 
-              Container(
+              SizedBox(
+
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
 
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade100,
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                child: OutlinedButton(
 
-                child: const Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  onPressed:
+                      loading
+                          ? null
+                          : register,
 
-                  children: [
-
-                    Text(
-                      'Credenciales de prueba:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    SizedBox(height: 10),
-
-                    Text('Usuario: admin'),
-                    Text('Contraseña: 12345678'),
-                  ],
+                  child: const Text(
+                    'Crear Cuenta',
+                  ),
                 ),
               ),
             ],

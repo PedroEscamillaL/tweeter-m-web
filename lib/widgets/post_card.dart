@@ -5,6 +5,7 @@ class PostCard extends StatelessWidget {
   final String titulo;
   final String imagen;
   final int likes;
+  final String username;
 
   final VoidCallback onDelete;
   final VoidCallback onLike;
@@ -14,6 +15,7 @@ class PostCard extends StatelessWidget {
     required this.titulo,
     required this.imagen,
     required this.likes,
+    required this.username,
     required this.onDelete,
     required this.onLike,
   });
@@ -22,7 +24,9 @@ class PostCard extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return Card(
+
       margin: const EdgeInsets.all(12),
+
       elevation: 6,
 
       shape: RoundedRectangleBorder(
@@ -30,29 +34,42 @@ class PostCard extends StatelessWidget {
       ),
 
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
 
         children: [
 
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(
+
+            borderRadius:
+                const BorderRadius.vertical(
               top: Radius.circular(20),
             ),
 
             child: imagen.isNotEmpty
+
                 ? Image.network(
+
                     imagen,
+
                     height: 240,
+
                     width: double.infinity,
+
                     fit: BoxFit.cover,
                   )
 
                 : Container(
+
                     height: 240,
+
                     width: double.infinity,
+
                     color: Colors.grey.shade300,
 
                     child: const Center(
+
                       child: Icon(
                         Icons.motorcycle,
                         size: 80,
@@ -63,34 +80,90 @@ class PostCard extends StatelessWidget {
           ),
 
           Padding(
+
             padding: const EdgeInsets.all(16),
 
             child: Column(
+
               crossAxisAlignment:
                   CrossAxisAlignment.start,
 
               children: [
 
+                Row(
+
+                  children: [
+
+                    const CircleAvatar(
+
+                      radius: 24,
+
+                      backgroundImage:
+                          NetworkImage(
+                        'https://cdn-icons-png.flaticon.com/512/149/149071.png',
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    Column(
+
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
+
+                      children: [
+
+                        Text(
+
+                          username,
+
+                          style: const TextStyle(
+
+                            fontSize: 16,
+
+                            fontWeight:
+                                FontWeight.bold,
+                          ),
+                        ),
+
+                        const Text(
+                          'Publicó una moto',
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
                 Text(
+
                   titulo,
+
                   style: const TextStyle(
+
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
+
+                    fontWeight:
+                        FontWeight.bold,
                   ),
                 ),
 
                 const SizedBox(height: 14),
 
                 Row(
+
                   mainAxisAlignment:
                       MainAxisAlignment.spaceBetween,
 
                   children: [
 
                     Row(
+
                       children: [
 
                         IconButton(
+
                           onPressed: onLike,
 
                           icon: const Icon(
@@ -100,7 +173,9 @@ class PostCard extends StatelessWidget {
                         ),
 
                         Text(
+
                           '$likes likes',
+
                           style: const TextStyle(
                             fontSize: 16,
                           ),
@@ -109,6 +184,7 @@ class PostCard extends StatelessWidget {
                     ),
 
                     IconButton(
+
                       onPressed: onDelete,
 
                       icon: const Icon(

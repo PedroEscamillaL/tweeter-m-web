@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/api_service.dart';
 
@@ -46,6 +47,36 @@ class _CreatePostScreenState
   Future<void> createPost() async {
 
     if (imagenSeleccionada == null) {
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Selecciona una imagen',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    final prefs =
+        await SharedPreferences.getInstance();
+
+    final username =
+        prefs.getString('username');
+
+    if (username == null) {
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Usuario no encontrado',
+          ),
+        ),
+      );
+
       return;
     }
 
@@ -58,15 +89,21 @@ class _CreatePostScreenState
       await ApiService.createPost(
         textController.text,
         imagenSeleccionada!,
+        username,
       );
 
       if (mounted) {
-        Navigator.pop(context);
+
+        Navigator.pop(
+          context,
+          true,
+        );
       }
 
     } catch (e) {
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         const SnackBar(
           content: Text(
             'Error al crear post',
@@ -87,8 +124,22 @@ class _CreatePostScreenState
 
     return Scaffold(
 
+      backgroundColor:
+          const Color(0xFFF5F7FA),
+
       appBar: AppBar(
-        title: const Text('Crear Post'),
+
+        title: const Text(
+          'Crear Post',
+        ),
+
+        backgroundColor:
+            Colors.white,
+
+        foregroundColor:
+            Colors.black,
+
+        elevation: 0,
       ),
 
       body: Padding(
@@ -102,60 +153,144 @@ class _CreatePostScreenState
             children: [
 
               TextField(
+
                 controller: textController,
 
-                decoration: const InputDecoration(
-                  labelText: 'Título',
-                ),
-              ),
+                decoration: InputDecoration(
 
-              const SizedBox(height: 20),
+                  labelText:
+                      '¿Qué moto quieres mostrar?',
 
-              ElevatedButton.icon(
+                  filled: true,
 
-                onPressed: seleccionarImagen,
+                  fillColor: Colors.white,
 
-                icon: const Icon(Icons.image),
+                  border: OutlineInputBorder(
 
-                label: const Text(
-                  'Seleccionar Imagen',
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              if (imagenSeleccionada != null)
-
-                ClipRRect(
-
-                  borderRadius:
-                      BorderRadius.circular(16),
-
-                  child: Image.file(
-                    imagenSeleccionada!,
-                    height: 220,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
+                    borderRadius:
+                        BorderRadius.circular(
+                      16,
+                    ),
                   ),
                 ),
+              ),
 
               const SizedBox(height: 20),
+
+              GestureDetector(
+
+                onTap: seleccionarImagen,
+
+                child: Container(
+
+                  height: 220,
+                  width: double.infinity,
+
+                  decoration: BoxDecoration(
+
+                    color: Colors.white,
+
+                    borderRadius:
+                        BorderRadius.circular(
+                      20,
+                    ),
+
+                    border: Border.all(
+                      color:
+                          Colors.grey.shade300,
+                    ),
+                  ),
+
+                  child: imagenSeleccionada == null
+
+                      ? const Column(
+
+                          mainAxisAlignment:
+                              MainAxisAlignment.center,
+
+                          children: [
+
+                            Icon(
+                              Icons.add_a_photo,
+                              size: 60,
+                              color:
+                                  Colors.blueGrey,
+                            ),
+
+                            SizedBox(height: 10),
+
+                            Text(
+                              'Seleccionar imagen',
+                              style: TextStyle(
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        )
+
+                      : ClipRRect(
+
+                          borderRadius:
+                              BorderRadius.circular(
+                            20,
+                          ),
+
+                          child: Image.file(
+                            imagenSeleccionada!,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                ),
+              ),
+
+              const SizedBox(height: 30),
 
               SizedBox(
 
                 width: double.infinity,
+                height: 55,
 
                 child: ElevatedButton(
 
+                  style: ElevatedButton.styleFrom(
+
+                    backgroundColor:
+                        Colors.indigo,
+
+                    shape:
+                        RoundedRectangleBorder(
+
+                      borderRadius:
+                          BorderRadius.circular(
+                        16,
+                      ),
+                    ),
+                  ),
+
                   onPressed:
-                      loading ? null : createPost,
+                      loading
+                          ? null
+                          : createPost,
 
                   child: loading
 
-                      ? const CircularProgressIndicator()
+                      ? const CircularProgressIndicator(
+                          color: Colors.white,
+                        )
 
                       : const Text(
+
                           'Publicar',
+
+                          style: TextStyle(
+
+                            color: Colors.white,
+
+                            fontSize: 18,
+
+                            fontWeight:
+                                FontWeight.bold,
+                          ),
                         ),
                 ),
               ),

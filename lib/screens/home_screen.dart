@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../widgets/post_card.dart';
 import '../services/api_service.dart';
 import 'create_post_screen.dart';
+import 'login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
 
@@ -28,9 +31,30 @@ class _HomeScreenState extends State<HomeScreen> {
     final data = await ApiService.getPosts();
 
     setState(() {
+
       posts = data;
       loading = false;
     });
+  }
+
+  Future<void> logout() async {
+
+    final prefs =
+        await SharedPreferences.getInstance();
+
+    await prefs.clear();
+
+    if (mounted) {
+
+      Navigator.pushReplacement(
+        context,
+
+        MaterialPageRoute(
+          builder: (_) =>
+              const LoginScreen(),
+        ),
+      );
+    }
   }
 
   @override
@@ -39,25 +63,57 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
 
       appBar: AppBar(
-        title: const Text('Moto Social'),
+
+        title: const Text(
+          'Moto Social',
+        ),
+
+        actions: [
+
+          IconButton(
+
+            onPressed: logout,
+
+            icon: const Icon(
+              Icons.logout,
+            ),
+          ),
+        ],
       ),
 
       body: loading
+
           ? const Center(
-              child: CircularProgressIndicator(),
+              child:
+                  CircularProgressIndicator(),
             )
 
           : ListView.builder(
+
               itemCount: posts.length,
 
-              itemBuilder: (context, index) {
+              itemBuilder: (
+                context,
+                index,
+              ) {
 
                 final post = posts[index];
 
                 return PostCard(
-                  titulo: post['text'] ?? 'Sin título',
-                  imagen: post['imageUrl'] ?? '',
-                  likes: post['likes'] ?? 0,
+
+                  titulo:
+                      post['text'] ??
+                          'Sin título',
+
+                  imagen:
+                      post['imageUrl'] ?? '',
+
+                  likes:
+                      post['likes'] ?? 0,
+
+                  username:
+                      post['user']?['username'] ??
+                      'Usuario',
 
                   onLike: () async {
 
@@ -77,7 +133,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     setState(() {
 
                       posts.removeWhere(
-                        (p) => p['id'] == post['id'],
+                        (p) =>
+                            p['id'] ==
+                            post['id'],
                       );
                     });
                   },
@@ -85,12 +143,14 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
 
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton:
+          FloatingActionButton(
 
         onPressed: () async {
 
           await Navigator.push(
             context,
+
             MaterialPageRoute(
               builder: (_) =>
                   const CreatePostScreen(),
@@ -100,7 +160,9 @@ class _HomeScreenState extends State<HomeScreen> {
           loadPosts();
         },
 
-        child: const Icon(Icons.add),
+        child: const Icon(
+          Icons.add,
+        ),
       ),
     );
   }
