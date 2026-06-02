@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-
   static const String baseUrl =
       'https://moto-social-api-latest.onrender.com/api';
 
@@ -13,20 +12,12 @@ class ApiService {
   // =========================
 
   static Future<List<dynamic>> getPosts() async {
-
-    final response = await http.get(
-      Uri.parse('$baseUrl/posts'),
-    );
+    final response = await http.get(Uri.parse('$baseUrl/posts'));
 
     if (response.statusCode == 200) {
-
       return jsonDecode(response.body);
-
     } else {
-
-      throw Exception(
-        'Error al obtener posts',
-      );
+      throw Exception('Error al obtener posts');
     }
   }
 
@@ -35,64 +26,46 @@ class ApiService {
     File imageFile,
     String username,
   ) async {
-
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse('$baseUrl/posts'),
-    );
+    var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/posts'));
 
     request.fields['text'] = text;
 
     request.fields['username'] = username;
 
     request.files.add(
-      await http.MultipartFile.fromPath(
-        'image',
-        imageFile.path,
-      ),
+      await http.MultipartFile.fromPath('image', imageFile.path),
     );
 
     var response = await request.send();
 
-    if (response.statusCode != 200 &&
-        response.statusCode != 201) {
-
-      throw Exception(
-        'Error al crear post',
-      );
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Error al crear post');
     }
   }
 
-  static Future<void> deletePost(
-    int id,
-  ) async {
+  static Future<void> deletePost(int id) async {
+    final response = await http.delete(Uri.parse('$baseUrl/posts/$id'));
 
-    final response = await http.delete(
-      Uri.parse('$baseUrl/posts/$id'),
-    );
-
-    if (response.statusCode != 200 &&
-        response.statusCode != 204) {
-
-      throw Exception(
-        'Error al borrar post',
-      );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Error al borrar post');
     }
   }
 
-  static Future<void> likePost(
-    int id,
-  ) async {
+  static Future<void> likePost(int id) async {
+    final response = await http.put(Uri.parse('$baseUrl/posts/$id/like'));
 
+    if (response.statusCode != 200) {
+      throw Exception('Error al dar like');
+    }
+  }
+
+  static Future<void> reactPost(int id, String type) async {
     final response = await http.put(
-      Uri.parse('$baseUrl/posts/$id/like'),
+      Uri.parse('$baseUrl/posts/$id/react/$type'),
     );
 
     if (response.statusCode != 200) {
-
-      throw Exception(
-        'Error al dar like',
-      );
+      throw Exception('Error al reaccionar');
     }
   }
 
@@ -100,75 +73,66 @@ class ApiService {
   // AUTH
   // =========================
 
-  static Future<void> register(
-    String username,
-    String password,
-  ) async {
-
+  static Future<void> register(String username, String password) async {
     final response = await http.post(
+      Uri.parse('$baseUrl/auth/register'),
 
-      Uri.parse(
-        '$baseUrl/auth/register',
-      ),
+      headers: {'Content-Type': 'application/json'},
 
-      headers: {
-        'Content-Type':
-            'application/json',
-      },
-
-      body: jsonEncode({
-
-        'username': username,
-        'password': password,
-
-      }),
+      body: jsonEncode({'username': username, 'password': password}),
     );
 
-    if (response.statusCode != 200 &&
-        response.statusCode != 201) {
-
-      throw Exception(
-        'Error al registrar usuario',
-      );
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Error al registrar usuario');
     }
   }
 
-  static Future<Map<String, dynamic>>
-      login(
+  static Future<Map<String, dynamic>> login(
     String username,
     String password,
   ) async {
-
     final response = await http.post(
+      Uri.parse('$baseUrl/auth/login'),
 
-      Uri.parse(
-        '$baseUrl/auth/login',
-      ),
+      headers: {'Content-Type': 'application/json'},
 
-      headers: {
-        'Content-Type':
-            'application/json',
-      },
-
-      body: jsonEncode({
-
-        'username': username,
-        'password': password,
-
-      }),
+      body: jsonEncode({'username': username, 'password': password}),
     );
 
     if (response.statusCode == 200) {
-
-      return jsonDecode(
-        response.body,
-      );
-
+      return jsonDecode(response.body);
     } else {
+      throw Exception('Error al iniciar sesión');
+    }
+  }
 
-      throw Exception(
-        'Error al iniciar sesión',
-      );
+  static Future<List<dynamic>> getComments(int postId) async {
+    final response = await http.get(Uri.parse('$baseUrl/comments/$postId'));
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Error al obtener comentarios');
+    }
+  }
+
+  static Future<void> createComment(int postId, int userId, String text) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/comments'),
+
+      headers: {'Content-Type': 'application/json'},
+
+      body: jsonEncode({
+        'postId': postId.toString(),
+
+        'userId': userId.toString(),
+
+        'text': text,
+      }),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Error al comentar');
     }
   }
 }

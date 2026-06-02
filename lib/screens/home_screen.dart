@@ -5,9 +5,9 @@ import '../widgets/post_card.dart';
 import '../services/api_service.dart';
 import 'create_post_screen.dart';
 import 'login_screen.dart';
+import 'comments_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-
   const HomeScreen({super.key});
 
   @override
@@ -15,154 +15,207 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   List<dynamic> posts = [];
 
   bool loading = true;
 
+  String username = 'Usuario';
+
   @override
   void initState() {
     super.initState();
+    loadUser();
     loadPosts();
   }
 
-  Future<void> loadPosts() async {
+  Future<void> loadUser() async {
+    final prefs = await SharedPreferences.getInstance();
 
+    setState(() {
+      username = prefs.getString('username') ?? 'Usuario';
+    });
+  }
+
+  Future<void> loadPosts() async {
     final data = await ApiService.getPosts();
 
     setState(() {
-
       posts = data;
       loading = false;
     });
   }
 
   Future<void> logout() async {
-
-    final prefs =
-        await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
 
     await prefs.clear();
 
     if (mounted) {
-
       Navigator.pushReplacement(
         context,
-
-        MaterialPageRoute(
-          builder: (_) =>
-              const LoginScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
-      appBar: AppBar(
-
-        title: const Text(
-          'Moto Social',
-        ),
-
-        actions: [
-
-          IconButton(
-
-            onPressed: logout,
-
-            icon: const Icon(
-              Icons.logout,
-            ),
-          ),
-        ],
-      ),
-
       body: loading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+                  decoration: BoxDecoration(
+                    color: Colors.deepPurple,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          '🏍️ MotoSphere',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
 
-          ? const Center(
-              child:
-                  CircularProgressIndicator(),
-            )
+                      const SizedBox(height: 20),
 
-          : ListView.builder(
+                      Row(
+                        children: [
+                          const CircleAvatar(
+                            radius: 24,
+                            backgroundImage: NetworkImage(
+                              'https://cdn-icons-png.flaticon.com/512/149/149071.png',
+                            ),
+                          ),
 
-              itemCount: posts.length,
+                          const SizedBox(width: 12),
 
-              itemBuilder: (
-                context,
-                index,
-              ) {
+                          Expanded(
+                            child: Text(
+                              username,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
 
-                final post = posts[index];
+                          ElevatedButton.icon(
+                            onPressed: logout,
+                            icon: const Icon(Icons.logout),
+                            label: const Text('Salir'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
 
-                return PostCard(
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: posts.length,
+                    itemBuilder: (context, index) {
+                      final post = posts[index];
 
-                  titulo:
-                      post['text'] ??
-                          'Sin título',
+                      return PostCard(
+                        titulo: post['text'] ?? 'Sin título',
 
-                  imagen:
-                      post['imageUrl'] ?? '',
+                        imagen: post['imageUrl'] ?? '',
 
-                  likes:
-                      post['likes'] ?? 0,
+                        username: post['user']?['username'] ?? 'Usuario',
 
-                  username:
-                      post['user']?['username'] ??
-                      'Usuario',
+                        likes: post['likes'] ?? 0,
 
-                  onLike: () async {
+                        loves: post['loves'] ?? 0,
 
-                    await ApiService.likePost(
-                      post['id'],
-                    );
+                        hahas: post['hahas'] ?? 0,
 
-                    loadPosts();
-                  },
+                        wows: post['wows'] ?? 0,
 
-                  onDelete: () async {
+                        sads: post['sads'] ?? 0,
 
-                    await ApiService.deletePost(
-                      post['id'],
-                    );
+                        angrys: post['angrys'] ?? 0,
 
-                    setState(() {
+                        onReact: (type) async {
+                          await ApiService.reactPost(post['id'], type);
 
-                      posts.removeWhere(
-                        (p) =>
-                            p['id'] ==
-                            post['id'],
+                          setState(() {
+                            switch (type) {
+                              case 'like':
+                                post['likes']++;
+                                break;
+
+                              case 'love':
+                                post['loves']++;
+                                break;
+
+                              case 'haha':
+                                post['hahas']++;
+                                break;
+
+                              case 'wow':
+                                post['wows']++;
+                                break;
+
+                              case 'sad':
+                                post['sads']++;
+                                break;
+
+                              case 'angry':
+                                post['angrys']++;
+                                break;
+                            }
+                          });
+                        },
+                        onComments: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  CommentsScreen(postId: post['id']),
+                            ),
+                          );
+                        },
+
+                        onDelete: () async {
+                          await ApiService.deletePost(post['id']);
+
+                          setState(() {
+                            posts.removeWhere((p) => p['id'] == post['id']);
+                          });
+                        },
                       );
-                    });
-                  },
-                );
-              },
+                    },
+                  ),
+                ),
+              ],
             ),
 
-      floatingActionButton:
-          FloatingActionButton(
-
+      floatingActionButton: FloatingActionButton(
         onPressed: () async {
-
           await Navigator.push(
             context,
-
-            MaterialPageRoute(
-              builder: (_) =>
-                  const CreatePostScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const CreatePostScreen()),
           );
 
           loadPosts();
         },
-
-        child: const Icon(
-          Icons.add,
-        ),
+        child: const Icon(Icons.add),
       ),
     );
   }
